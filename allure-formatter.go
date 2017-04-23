@@ -8,69 +8,69 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/jstemmer/go-junit-report/parser"
+	"github.com/eIGato/go-allure-report/parser"
 )
 
-// JUnitTestSuites is a collection of JUnit test suites.
-type JUnitTestSuites struct {
+// AllureTestSuites is a collection of Allure test suites.
+type AllureTestSuites struct {
 	XMLName xml.Name `xml:"testsuites"`
-	Suites  []JUnitTestSuite
+	Suites  []AllureTestSuite
 }
 
-// JUnitTestSuite is a single JUnit test suite which may contain many
+// AllureTestSuite is a single Allure test suite which may contain many
 // testcases.
-type JUnitTestSuite struct {
+type AllureTestSuite struct {
 	XMLName    xml.Name        `xml:"testsuite"`
 	Tests      int             `xml:"tests,attr"`
 	Failures   int             `xml:"failures,attr"`
 	Time       string          `xml:"time,attr"`
 	Name       string          `xml:"name,attr"`
-	Properties []JUnitProperty `xml:"properties>property,omitempty"`
-	TestCases  []JUnitTestCase
+	Properties []AllureProperty `xml:"properties>property,omitempty"`
+	TestCases  []AllureTestCase
 }
 
-// JUnitTestCase is a single test case with its result.
-type JUnitTestCase struct {
+// AllureTestCase is a single test case with its result.
+type AllureTestCase struct {
 	XMLName     xml.Name          `xml:"testcase"`
 	Classname   string            `xml:"classname,attr"`
 	Name        string            `xml:"name,attr"`
 	Time        string            `xml:"time,attr"`
-	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
-	Failure     *JUnitFailure     `xml:"failure,omitempty"`
+	SkipMessage *AllureSkipMessage `xml:"skipped,omitempty"`
+	Failure     *AllureFailure     `xml:"failure,omitempty"`
 }
 
-// JUnitSkipMessage contains the reason why a testcase was skipped.
-type JUnitSkipMessage struct {
+// AllureSkipMessage contains the reason why a testcase was skipped.
+type AllureSkipMessage struct {
 	Message string `xml:"message,attr"`
 }
 
-// JUnitProperty represents a key/value pair used to define properties.
-type JUnitProperty struct {
+// AllureProperty represents a key/value pair used to define properties.
+type AllureProperty struct {
 	Name  string `xml:"name,attr"`
 	Value string `xml:"value,attr"`
 }
 
-// JUnitFailure contains data related to a failed test.
-type JUnitFailure struct {
+// AllureFailure contains data related to a failed test.
+type AllureFailure struct {
 	Message  string `xml:"message,attr"`
 	Type     string `xml:"type,attr"`
 	Contents string `xml:",chardata"`
 }
 
-// JUnitReportXML writes a JUnit xml representation of the given report to w
-// in the format described at http://windyroad.org/dl/Open%20Source/JUnit.xsd
-func JUnitReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w io.Writer) error {
-	suites := JUnitTestSuites{}
+// AllureReportXML writes a Allure xml representation of the given report to w
+// in the format described at http://windyroad.org/dl/Open%20Source/Allure.xsd
+func AllureReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w io.Writer) error {
+	suites := AllureTestSuites{}
 
-	// convert Report to JUnit test suites
+	// convert Report to Allure test suites
 	for _, pkg := range report.Packages {
-		ts := JUnitTestSuite{
+		ts := AllureTestSuite{
 			Tests:      len(pkg.Tests),
 			Failures:   0,
 			Time:       formatTime(pkg.Time),
 			Name:       pkg.Name,
-			Properties: []JUnitProperty{},
-			TestCases:  []JUnitTestCase{},
+			Properties: []AllureProperty{},
+			TestCases:  []AllureTestCase{},
 		}
 
 		classname := pkg.Name
@@ -83,14 +83,14 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w
 			// if goVersion was not specified as a flag, fall back to version reported by runtime
 			goVersion = runtime.Version()
 		}
-		ts.Properties = append(ts.Properties, JUnitProperty{"go.version", goVersion})
+		ts.Properties = append(ts.Properties, AllureProperty{"go.version", goVersion})
 		if pkg.CoveragePct != "" {
-			ts.Properties = append(ts.Properties, JUnitProperty{"coverage.statements.pct", pkg.CoveragePct})
+			ts.Properties = append(ts.Properties, AllureProperty{"coverage.statements.pct", pkg.CoveragePct})
 		}
 
 		// individual test cases
 		for _, test := range pkg.Tests {
-			testCase := JUnitTestCase{
+			testCase := AllureTestCase{
 				Classname: classname,
 				Name:      test.Name,
 				Time:      formatTime(test.Time),
@@ -99,7 +99,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w
 
 			if test.Result == parser.FAIL {
 				ts.Failures++
-				testCase.Failure = &JUnitFailure{
+				testCase.Failure = &AllureFailure{
 					Message:  "Failed",
 					Type:     "",
 					Contents: strings.Join(test.Output, "\n"),
@@ -107,7 +107,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w
 			}
 
 			if test.Result == parser.SKIP {
-				testCase.SkipMessage = &JUnitSkipMessage{strings.Join(test.Output, "\n")}
+				testCase.SkipMessage = &AllureSkipMessage{strings.Join(test.Output, "\n")}
 			}
 
 			ts.TestCases = append(ts.TestCases, testCase)

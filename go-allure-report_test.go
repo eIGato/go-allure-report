@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jstemmer/go-junit-report/parser"
+	"github.com/eIGato/go-allure-report/parser"
 )
 
 type TestCase struct {
@@ -242,7 +242,7 @@ var testCases = []TestCase{
 		report: &parser.Report{
 			Packages: []parser.Package{
 				{
-					Name: "github.com/dmitris/test-go-junit-report",
+					Name: "github.com/dmitris/test-go-allure-report",
 					Time: 440,
 					Tests: []*parser.Test{
 						{
@@ -613,29 +613,29 @@ func TestParser(t *testing.T) {
 	}
 }
 
-func TestJUnitFormatter(t *testing.T) {
-	testJUnitFormatter(t, "")
+func TestAllureFormatter(t *testing.T) {
+	testAllureFormatter(t, "")
 }
 
 func TestVersionFlag(t *testing.T) {
-	testJUnitFormatter(t, "custom-version")
+	testAllureFormatter(t, "custom-version")
 }
 
-func testJUnitFormatter(t *testing.T, goVersion string) {
+func testAllureFormatter(t *testing.T, goVersion string) {
 	for _, testCase := range testCases {
 		report, err := loadTestReport(testCase.reportName, goVersion)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		var junitReport bytes.Buffer
+		var allureReport bytes.Buffer
 
-		if err = JUnitReportXML(testCase.report, testCase.noXMLHeader, goVersion, &junitReport); err != nil {
+		if err = AllureReportXML(testCase.report, testCase.noXMLHeader, goVersion, &allureReport); err != nil {
 			t.Fatal(err)
 		}
 
-		if string(junitReport.Bytes()) != report {
-			t.Fatalf("Fail: %s Report xml ==\n%s, want\n%s", testCase.name, string(junitReport.Bytes()), report)
+		if string(allureReport.Bytes()) != report {
+			t.Fatalf("Fail: %s Report xml ==\n%s, want\n%s", testCase.name, string(allureReport.Bytes()), report)
 		}
 	}
 }
